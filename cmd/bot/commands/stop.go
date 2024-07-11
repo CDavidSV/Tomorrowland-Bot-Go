@@ -1,0 +1,60 @@
+package commands
+
+import (
+	"time"
+
+	"github.com/CDavidSV/Tomorrowland-Bot-Go/cmd/bot/config"
+	"github.com/CDavidSV/Tomorrowland-Bot-Go/internal/player"
+	"github.com/bwmarrin/discordgo"
+)
+
+var StopCommand Command = Command{
+	Data: &discordgo.ApplicationCommand{
+		Name:         "stop",
+		Description:  "Stops the current live stream and disconnects from the voice channel",
+		DMPermission: &DMPermissionFalse,
+	},
+	Callback: func(s *discordgo.Session, i *discordgo.InteractionCreate, bot *config.Bot) {
+		if i.Interaction.Member.Permissions&discordgo.PermissionAdministrator != discordgo.PermissionAdministrator {
+			bot.ErrorInteractionResponse(s, i, config.Content{
+				Message: "You do not have enough permissions to use this command",
+			}, true)
+			return
+		}
+
+		if yes := player.PlayerExists(i.Interaction.GuildID); !yes {
+			bot.ErrorInteractionResponse(s, i, config.Content{
+				Message: "I'm not inside any voice channel currently",
+			}, true)
+			return
+		}
+
+		err := player.Stop(s, i.Interaction.GuildID)
+		if err != nil {
+			bot.Logger.Error(err.Error(), "command", "stop")
+			bot.ErrorInteractionResponse(s, i, config.Content{
+				Message: "I'm sorry, something went wrong. Try again",
+			}, true)
+			return
+		}
+
+		responseEmbed := &discordgo.MessageEmbed{
+			Author: &discordgo.MessageEmbedAuthor{
+				Name:    "Tomorrowland Live",
+				IconURL: s.State.User.AvatarURL(""),
+			},
+			Title:     "Thanks for tuning in. See you next time!",
+			Timestamp: time.Now().Format(time.RFC3339),
+			Color:     0x7E22DE,
+		}
+
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					responseEmbed,
+				},
+			},
+		})
+	},
+}
