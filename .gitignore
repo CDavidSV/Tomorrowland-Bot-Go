@@ -22,3 +22,7 @@ go.work
 
 # environment files
 .env
+
+
+# node
+node_modules

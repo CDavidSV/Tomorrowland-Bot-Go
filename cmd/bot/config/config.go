@@ -1,7 +1,10 @@
 package config
 
 import (
+	"bytes"
+	"encoding/base64"
 	"log/slog"
+	"os/exec"
 
 	"github.com/CDavidSV/Tomorrowland-Bot-Go/internal/youtube"
 	"github.com/bwmarrin/discordgo"
@@ -21,7 +24,7 @@ func (b *Bot) BotError(err error, commandName string) {
 	b.Logger.Error(err.Error(), "command", commandName)
 }
 
-func (b *Bot) ErrorInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, content Content, ephemeral bool) {
+func (b *Bot) ErrorInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, content Content, edit bool, ephemeral bool) {
 	responseEmbed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    content.Message,
@@ -34,6 +37,15 @@ func (b *Bot) ErrorInteractionResponse(s *discordgo.Session, i *discordgo.Intera
 		responseEmbed.Description = content.Description
 	}
 
+	if edit {
+		c := ""
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Content: &c,
+			Embeds:  &[]*discordgo.MessageEmbed{responseEmbed},
+		})
+		return
+	}
+
 	data := &discordgo.InteractionResponseData{
 		Embeds: []*discordgo.MessageEmbed{
 			responseEmbed,
@@ -41,7 +53,7 @@ func (b *Bot) ErrorInteractionResponse(s *discordgo.Session, i *discordgo.Intera
 	}
 
 	if ephemeral {
-		data.Flags = 1 << 6
+		data.Flags = discordgo.MessageFlagsEphemeral
 	}
 
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -69,4 +81,22 @@ func (b *Bot) ErrorMessageResponse(s *discordgo.Session, i *discordgo.Interactio
 	}
 
 	return nil
+}
+
+func (bot *Bot) GetTimetable(date string) (*bytes.Reader, error) {
+	cmd := exec.Command("tmrl-web", "-d", date)
+
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := base64.StdEncoding.DecodeString(string(out))
+	if err != nil {
+		return nil, err
+	}
+
+	r := bytes.NewReader(data)
+
+	return r, err
 }

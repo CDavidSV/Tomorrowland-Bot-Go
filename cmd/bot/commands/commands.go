@@ -27,6 +27,7 @@ func LoadCommands(s *discordgo.Session, bot *config.Bot, reloadCommands bool, te
 	setCommand(PlayCommand)
 	setCommand(StopCommand)
 	setCommand(InviteCommand)
+	setCommand(TimetableCommand)
 
 	defer s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if c, ok := commands[i.ApplicationCommandData().Name]; ok {

@@ -18,7 +18,7 @@ var PlayCommand Command = Command{
 		if i.Interaction.Member.Permissions&discordgo.PermissionAdministrator != discordgo.PermissionAdministrator {
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "You do not have enough permissions to use this command",
-			}, true)
+			}, false, true)
 			return
 		}
 
@@ -27,7 +27,7 @@ var PlayCommand Command = Command{
 		if err != nil {
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "You need to be inside a voice channel to execute this command",
-			}, true)
+			}, false, true)
 			return
 		}
 
@@ -35,7 +35,7 @@ var PlayCommand Command = Command{
 		if yes := player.PlayerExists(i.Interaction.GuildID); yes {
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "I'm already inside a voice channel, come listen!",
-			}, false)
+			}, false, false)
 			return
 		}
 
@@ -45,7 +45,7 @@ var PlayCommand Command = Command{
 			bot.BotError(err, "play")
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "There was a error while attempting to join your voice channel. Please ensure that the bot has enough permissions to join the specified channel",
-			}, true)
+			}, false, true)
 			return
 		}
 

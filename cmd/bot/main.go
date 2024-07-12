@@ -60,6 +60,7 @@ func main() {
 
 	session.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
 
+	// Fetch live streams
 	list := []youtube.YTVideo{}
 	youtube.GetLiveStreams(&list)
 	fetchLivestreamsJob(&list, make(chan struct{}))

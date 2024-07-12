@@ -18,14 +18,14 @@ var StopCommand Command = Command{
 		if i.Interaction.Member.Permissions&discordgo.PermissionAdministrator != discordgo.PermissionAdministrator {
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "You do not have enough permissions to use this command",
-			}, true)
+			}, false, true)
 			return
 		}
 
 		if yes := player.PlayerExists(i.Interaction.GuildID); !yes {
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "I'm not inside any voice channel currently",
-			}, true)
+			}, false, true)
 			return
 		}
 
@@ -34,7 +34,7 @@ var StopCommand Command = Command{
 			bot.Logger.Error(err.Error(), "command", "stop")
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "I'm sorry, something went wrong. Try again",
-			}, true)
+			}, false, true)
 			return
 		}
 
