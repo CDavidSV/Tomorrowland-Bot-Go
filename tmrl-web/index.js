@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const { chromium } = require("playwright");
 
 const getArg = (arg, defaultValue) => {
@@ -8,7 +7,6 @@ const getArg = (arg, defaultValue) => {
             return v;
         }
     });
-
 
     if (commandIndex === -1) {
         return defaultValue;
@@ -30,25 +28,44 @@ const formatDate = (date) => {
     if (day.length < 2) day = `0${day}`; 
 
     return [year, month, day].join('-');
-} 
+}
 
-(async () => {
+const getTimetable = async (page) => {
     const now = new Date();
     const day = getArg("-d", formatDate(now));
 
-    const browser = await chromium.launch();
-
-    let page = await browser.newPage();
-    await page.setViewportSize({ width: 2560, height: 1440 });
     await page.goto(`https://belgium.tomorrowland.com/en/line-up/?page=timetable&day=${day}`);
+    const buffer = await page.locator('#planby-wrapper').screenshot(); // { path: `timetable_${day}.png` }
+    console.log(buffer.toString('base64'));
+}
 
-    await page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll').click({ button: 'left' });
+(async () => {
+    const browser = await chromium.launch(); // { headless: false }
+    const operation = process.argv[2];
+    
+    if (!operation) {
+        throw Error("Specific operation required. Valid operations: timetable, stages.");
+    }
+    
+    const operations = {
+        "timetable": getTimetable
+    };
+    
+    if (!operations[operation]) {
+        throw Error("Invalid Operation. Valid operations: timetable, stages.")
+    }
+    
+    let page = await browser.newPage();
+    
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    
+    await page.goto('https://belgium.tomorrowland.com/en/line-up/');
+    const acceptCookiesBtn = page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll');
+    await acceptCookiesBtn.click({ button: 'left' });
     await page.mouse.move(0, 0);
 
-    setTimeout(async () => {
-        const buffer = await page.locator('#planby-wrapper').screenshot(); // { path: `timetable_${day}.png` }
-        console.log(buffer.toString('base64'));
+    await page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll').waitFor({ state: "detached" });
 
-        await browser.close();
-    }, 300);
+    await operations[operation](page);
+    await browser.close();
 })();

@@ -12,7 +12,7 @@ var PlayCommand Command = Command{
 	Data: &discordgo.ApplicationCommand{
 		Name:         "play",
 		Description:  "Play the tomorrowland livestream",
-		DMPermission: &DMPermissionFalse,
+		DMPermission: &dmPermissionFalse,
 	},
 	Callback: func(s *discordgo.Session, i *discordgo.InteractionCreate, bot *config.Bot) {
 		if i.Interaction.Member.Permissions&discordgo.PermissionAdministrator != discordgo.PermissionAdministrator {
@@ -32,10 +32,11 @@ var PlayCommand Command = Command{
 		}
 
 		// Now check if the bot is already inside a vc
-		if yes := player.PlayerExists(i.Interaction.GuildID); yes {
+		_, ok := s.VoiceConnections[i.Interaction.GuildID]
+		if ok {
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "I'm already inside a voice channel, come listen!",
-			}, false, false)
+			}, false, true)
 			return
 		}
 
@@ -51,17 +52,25 @@ var PlayCommand Command = Command{
 
 		selectedStream := (*bot.LiveStreams)[0]
 
+		err = player.Play(connection, i.ChannelID, selectedStream.ManifestURL)
+		if err != nil {
+			bot.BotError(err, "play")
+			bot.ErrorMessageResponse(s, i, config.Content{
+				Message: "I'm sorry, something went wrong. Try again",
+			})
+		}
+
 		responseEmbed := &discordgo.MessageEmbed{
 			Title: selectedStream.Title,
 			URL:   selectedStream.URL,
 			Author: &discordgo.MessageEmbedAuthor{
 				Name:    "Tomorrowland Live",
-				IconURL: "https://cdn.discordapp.com/attachments/1107660251286745108/1131297918620532746/stream.gif?ex=6690d30a&is=668f818a&hm=4525fb060ce7c0e6e47dff23b51086d43b724e40d1ecd4185d6d90c8a0c42281&",
+				IconURL: "https://d384fynlilbsl.cloudfront.net/stream.gif",
 			},
 			Image: &discordgo.MessageEmbedImage{
 				URL: selectedStream.ThumbnailURL,
 			},
-			Color: 0x7E22DE,
+			Color: config.MainColorHex,
 			Footer: &discordgo.MessageEmbedFooter{
 				Text:    "Tomorrowland Bot",
 				IconURL: s.State.User.AvatarURL(""),
@@ -77,13 +86,5 @@ var PlayCommand Command = Command{
 				},
 			},
 		})
-
-		err = player.Play(connection, selectedStream.ManifestURL)
-		if err != nil {
-			bot.BotError(err, "play")
-			bot.ErrorMessageResponse(s, i, config.Content{
-				Message: "I'm sorry, something went wrong. Try again",
-			})
-		}
 	},
 }

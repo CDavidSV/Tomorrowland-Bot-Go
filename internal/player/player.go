@@ -11,8 +11,9 @@ import (
 // Right now using dca from "https://github.com/jonas747/dca", looking to make a custom implementation in the future
 
 type Player struct {
-	encoderSession *dca.EncodeSession
-	streamSession  *dca.StreamingSession
+	encoderSession    *dca.EncodeSession
+	streamSession     *dca.StreamingSession
+	originalChannelID string
 }
 
 var playerSessions map[string]Player = map[string]Player{}
@@ -25,7 +26,16 @@ func PlayerExists(guildID string) bool {
 	return false
 }
 
-func Play(vc *discordgo.VoiceConnection, url string) error {
+func GetOriginalChannelID(guildID string) (string, error) {
+	playerSesssion, ok := playerSessions[guildID]
+	if !ok {
+		return "", fmt.Errorf("there is no player session in guild %v", guildID)
+	}
+
+	return playerSesssion.originalChannelID, nil
+}
+
+func Play(vc *discordgo.VoiceConnection, channelID string, url string) error {
 	// Options for encoding
 	options := dca.StdEncodeOptions
 	options.RawOutput = true
@@ -38,38 +48,46 @@ func Play(vc *discordgo.VoiceConnection, url string) error {
 		return fmt.Errorf("error decoding stream: %v", err)
 	}
 
+	// Check if a current player session exists
+	if ps, ok := playerSessions[vc.GuildID]; ok {
+		// Stop the current player and delete the session
+		ps.encoderSession.Cleanup()
+
+		// Change the encoder session
+		ps.encoderSession = encodingSession
+	}
+
 	err = vc.Speaking(true)
 	if err != nil {
 		encodingSession.Cleanup()
 		return fmt.Errorf("error speaking: %v", err)
 	}
 
-	go func() {
-		// Wait for stream to be done
-		streamDone := make(chan error)
-		stream := dca.NewStream(encodingSession, vc, streamDone)
-
-		// Add stream data to players sessions map
-		playerSessions[vc.GuildID] = Player{
-			encoderSession: encodingSession,
-			streamSession:  stream,
-		}
-
-		defer func() {
-			encodingSession.Cleanup()
-			vc.Speaking(false)
-
-			delete(playerSessions, vc.GuildID)
-		}()
-
-		if err := <-streamDone; err != nil {
-			log.Println("stream error:", err)
-
-			// Handle stream expiration
-		}
-	}()
+	// Start the stream
+	go startStream(encodingSession, vc, channelID)
 
 	return nil
+}
+
+func startStream(encodingSession *dca.EncodeSession, vc *discordgo.VoiceConnection, channelID string) {
+	// Wait for stream to be done
+	streamDone := make(chan error)
+	stream := dca.NewStream(encodingSession, vc, streamDone)
+
+	// Add stream data to players sessions map
+	playerSessions[vc.GuildID] = Player{
+		encoderSession:    encodingSession,
+		streamSession:     stream,
+		originalChannelID: channelID,
+	}
+
+	defer encodingSession.Cleanup()
+
+	if err := <-streamDone; err != nil {
+		log.Println("stream error:", err)
+
+		// Handle stream expiration
+	}
 }
 
 func Stop(s *discordgo.Session, guildID string) error {

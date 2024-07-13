@@ -11,7 +11,7 @@ var InviteCommand Command = Command{
 	Data: &discordgo.ApplicationCommand{
 		Name:         "invite",
 		Description:  "Invite me to your server",
-		DMPermission: &DMPermissionTrue,
+		DMPermission: &dmPermissionTrue,
 	},
 	Callback: func(s *discordgo.Session, i *discordgo.InteractionCreate, bot *config.Bot) {
 		responseEmbed := &discordgo.MessageEmbed{
@@ -20,7 +20,7 @@ var InviteCommand Command = Command{
 				IconURL: s.State.User.AvatarURL(""),
 			},
 			Description: "Bring the party to your server!",
-			Color:       0xb917ff,
+			Color:       config.MainColorHex,
 			Timestamp:   time.Now().Format(time.RFC3339),
 		}
 
