@@ -64,7 +64,7 @@ const getTimetable = async (page) => {
     await acceptCookiesBtn.click({ button: 'left' });
     await page.mouse.move(0, 0);
 
-    await page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll').waitFor({ state: "detached" });
+    await page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll').waitFor({ state: "hidden" });
 
     await operations[operation](page);
     await browser.close();

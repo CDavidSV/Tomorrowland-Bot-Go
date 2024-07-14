@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/CDavidSV/Tomorrowland-Bot-Go/cmd/bot/config"
@@ -97,9 +98,24 @@ func getStage(s *discordgo.Session, i *discordgo.InteractionCreate, _ *config.Bo
 		return
 	}
 
-	fields := ""
-	for _, p := range performances {
-		fields += fmt.Sprintf("\n**%v**", p.ArtistName)
+	// Sort performances by start time
+	sort.Slice(performances, func(i, j int) bool {
+		return performances[i].StartTime.Unix() < performances[j].StartTime.Unix()
+	})
+
+	var fields []*discordgo.MessageEmbedField = make([]*discordgo.MessageEmbedField, len(performances))
+	for i, p := range performances {
+		fields[i] = &discordgo.MessageEmbedField{
+			Name:   p.ArtistName,
+			Value:  fmt.Sprintf("%v to %v", p.StartTime.Format("15:04"), p.EndTime.Format("15:04")),
+			Inline: false,
+		}
+	}
+
+	// if the length is greater than 25
+	// TODO: Implement pagination in the future
+	if len(fields) > 25 {
+		fields = fields[:25]
 	}
 
 	actionRow := discordgo.ActionsRow{
@@ -112,8 +128,9 @@ func getStage(s *discordgo.Session, i *discordgo.InteractionCreate, _ *config.Bo
 		},
 	}
 
-	responseEmbed.Title = fmt.Sprintf("%v\n%v", selectedStage.StringValue(), selectedDay.StringValue())
-	responseEmbed.Description = fields
+	responseEmbed.Title = fmt.Sprintf("%v\n%v", selectedStage.StringValue(), tmrlweb.DayNameMap[selectedDay.StringValue()])
+	responseEmbed.Fields = fields
+	responseEmbed.Description = "All times are in GMT+2 (Belgium Time)"
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{

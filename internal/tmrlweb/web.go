@@ -9,28 +9,35 @@ import (
 	"net/http"
 	"os/exec"
 	"sync"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 type Performance struct {
-	ArtistName string `json:"name"`
+	ArtistName string `json:"name,omitempty"`
 	Stage      struct {
-		Name string `json:"name"`
-	} `json:"stage"`
-	Date string `json:"date"`
-	Day  string `json:"day"`
+		Name string `json:"name,omitempty"`
+	} `json:"stage,omitempty"`
+	Date      string `json:"date,omitempty"`
+	Day       string `json:"day,omitempty"`
+	StartTime Date   `json:"startTime,omitempty"`
+	EndTime   Date   `json:"endTime,omitempty"`
 }
 
 type YTVideo struct {
-	ID           string `json:"id"`
-	Title        string `json:"fulltitle"`
-	ThumbnailURL string `json:"thumbnail"`
-	ChannelTitle string `json:"channel"`
-	ChannelURL   string `json:"channel_url"`
-	URL          string `json:"original_url"`
-	ManifestURL  string `json:"url"`
-	Live         bool   `json:"is_live"`
+	ID           string `json:"id,omitempty"`
+	Title        string `json:"fulltitle,omitempty"`
+	ThumbnailURL string `json:"thumbnail,omitempty"`
+	ChannelTitle string `json:"channel,omitempty"`
+	ChannelURL   string `json:"channel_url,omitempty"`
+	URL          string `json:"original_url,omitempty"`
+	ManifestURL  string `json:"url,omitempty"`
+	Live         bool   `json:"is_live,omitempty"`
+}
+
+type Date struct {
+	time.Time
 }
 
 var DayNameMap = map[string]string{
@@ -65,6 +72,17 @@ var performances map[string]map[string][]Performance = map[string]map[string][]P
 var performanceURLS []string = []string{
 	"https://artist-lineup-cdn.tomorrowland.com/TLBE24-W1-211903bb-da4c-445d-a1b3-6b17479a9fab.json",
 	"https://artist-lineup-cdn.tomorrowland.com/TLBE24-W2-211903bb-da4c-445d-a1b3-6b17479a9fab.json",
+}
+
+func (d *Date) UnmarshalJSON(b []byte) (err error) {
+	// "2024-07-19 23:30:00+02:00"
+	date, err := time.Parse(`"2006-01-02 15:04:05-07:00"`, string(b))
+	if err != nil {
+		return err
+	}
+
+	d.Time = date
+	return nil
 }
 
 func GetTimetableImage(date string) (*bytes.Reader, error) {
