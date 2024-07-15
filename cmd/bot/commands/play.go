@@ -1,10 +1,9 @@
 package commands
 
 import (
-	"time"
+	"strconv"
 
 	"github.com/CDavidSV/Tomorrowland-Bot-Go/cmd/bot/config"
-	"github.com/CDavidSV/Tomorrowland-Bot-Go/internal/player"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -23,7 +22,7 @@ var PlayCommand Command = Command{
 		}
 
 		// First check if the user is inside a vc
-		vcState, err := s.State.VoiceState(i.Interaction.GuildID, i.Interaction.Member.User.ID)
+		_, err := s.State.VoiceState(i.Interaction.GuildID, i.Interaction.Member.User.ID)
 		if err != nil {
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "You need to be inside a voice channel to execute this command",
@@ -35,47 +34,51 @@ var PlayCommand Command = Command{
 		_, ok := s.VoiceConnections[i.Interaction.GuildID]
 		if ok {
 			bot.ErrorInteractionResponse(s, i, config.Content{
-				Message: "I'm already inside a voice channel, come listen!",
+				Message:     "I'm already inside a voice channel, come listen!",
+				Description: "If you manually disconnected me, wait a few seconds before trying again",
 			}, false, true)
 			return
 		}
 
-		// Attempt to join the users vc
-		connection, err := s.ChannelVoiceJoin(i.Interaction.GuildID, vcState.ChannelID, false, true)
-		if err != nil {
-			bot.BotError(err, "play")
-			bot.ErrorInteractionResponse(s, i, config.Content{
-				Message: "There was a error while attempting to join your voice channel. Please ensure that the bot has enough permissions to join the specified channel",
-			}, false, true)
-			return
-		}
-
-		selectedStream := (*bot.LiveStreams)[0]
-
-		err = player.Play(connection, i.ChannelID, selectedStream.ManifestURL)
-		if err != nil {
-			bot.BotError(err, "play")
+		if len(*bot.LiveStreams) == 0 {
 			bot.ErrorMessageResponse(s, i, config.Content{
-				Message: "I'm sorry, something went wrong. Try again",
+				Message: "I'm sorry, there are no live streams at the moment. Try again later",
 			})
+			return
+		}
+
+		selectOptions := make([]discordgo.SelectMenuOption, len(*bot.LiveStreams))
+		for i, v := range *bot.LiveStreams {
+			selectOptions[i] = discordgo.SelectMenuOption{
+				Label:       v.Title,
+				Description: v.ChannelTitle,
+				Value:       strconv.Itoa(i),
+				Emoji: &discordgo.ComponentEmoji{
+					Name: "🔴",
+				},
+			}
 		}
 
 		responseEmbed := &discordgo.MessageEmbed{
-			Title: selectedStream.Title,
-			URL:   selectedStream.URL,
 			Author: &discordgo.MessageEmbedAuthor{
 				Name:    "Tomorrowland Live",
-				IconURL: "https://d384fynlilbsl.cloudfront.net/stream.gif",
-			},
-			Image: &discordgo.MessageEmbedImage{
-				URL: selectedStream.ThumbnailURL,
-			},
-			Color: config.MainColorHex,
-			Footer: &discordgo.MessageEmbedFooter{
-				Text:    "Tomorrowland Bot",
 				IconURL: s.State.User.AvatarURL(""),
 			},
-			Timestamp: time.Now().Format(time.RFC3339),
+			Title: "Select a live stream",
+			Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL: config.OneWorldRadioImg,
+			},
+			Color: config.MainColorHex,
+		}
+
+		actionRow := discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.SelectMenu{
+					CustomID:    "liveSelect",
+					Placeholder: "Choose the livestream you wish to play!",
+					Options:     selectOptions,
+				},
+			},
 		}
 
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -84,6 +87,10 @@ var PlayCommand Command = Command{
 				Embeds: []*discordgo.MessageEmbed{
 					responseEmbed,
 				},
+				Components: []discordgo.MessageComponent{
+					actionRow,
+				},
+				Flags: discordgo.MessageFlagsEphemeral,
 			},
 		})
 	},

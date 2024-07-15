@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/CDavidSV/Tomorrowland-Bot-Go/cmd/bot/commands"
+	"github.com/CDavidSV/Tomorrowland-Bot-Go/cmd/bot/components"
 	"github.com/CDavidSV/Tomorrowland-Bot-Go/cmd/bot/config"
 	"github.com/CDavidSV/Tomorrowland-Bot-Go/internal/player"
 	"github.com/bwmarrin/discordgo"
@@ -27,11 +28,18 @@ func ReadyEvent(bot *config.Bot) EventHandler {
 
 func InteractionCreate(bot *config.Bot) EventHandler {
 	return func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if c, ok := commands.SlashCommands[i.ApplicationCommandData().Name]; ok {
-			// Log command in console
-			bot.Logger.Info("Command executed", "command", i.ApplicationCommandData().Name, "user", i.Interaction.Member.User.ID, "guild", i.Interaction.GuildID)
+		switch i.Type {
+		case discordgo.InteractionApplicationCommand:
+			if c, ok := commands.SlashCommands[i.ApplicationCommandData().Name]; ok {
+				// Log command in console
+				bot.Logger.Info("Command executed", "command", i.ApplicationCommandData().Name, "user", i.Interaction.Member.User.ID, "guild", i.Interaction.GuildID)
 
-			c.Callback(s, i, bot)
+				c.Callback(s, i, bot)
+			}
+		case discordgo.InteractionMessageComponent:
+			if c, ok := components.Components[i.MessageComponentData().CustomID]; ok {
+				c(s, i, bot)
+			}
 		}
 	}
 }

@@ -86,7 +86,7 @@ func startStream(encodingSession *dca.EncodeSession, vc *discordgo.VoiceConnecti
 	if err := <-streamDone; err != nil {
 		log.Println("stream error:", err)
 
-		// Handle stream expiration
+		// TODO: Handle stream expiration
 	}
 }
 

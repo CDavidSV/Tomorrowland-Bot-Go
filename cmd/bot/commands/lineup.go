@@ -20,7 +20,7 @@ func getTimetable(s *discordgo.Session, i *discordgo.InteractionCreate, bot *con
 			IconURL: s.State.User.AvatarURL(""),
 		},
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: "https://d384fynlilbsl.cloudfront.net/one_world_radio_logo.png",
+			URL: config.OneWorldRadioImg,
 		},
 		Title:     tmrlweb.DayNameMap[selectedDay.StringValue()],
 		Color:     config.MainColorHex,
@@ -82,7 +82,7 @@ func getStage(s *discordgo.Session, i *discordgo.InteractionCreate, _ *config.Bo
 		Title: "There are no performances for this stage on this day",
 		Color: config.MainColorHex,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: "https://d384fynlilbsl.cloudfront.net/one_world_radio_logo.png",
+			URL: config.OneWorldRadioImg,
 		},
 	}
 
@@ -166,7 +166,7 @@ var LineupCommand Command = Command{
 			},
 			{
 				Name:        "stage",
-				Description: "See the artist playing on a specific stage and day",
+				Description: "See the artists playing on a specific stage and day",
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
 				Options: []*discordgo.ApplicationCommandOption{
 					{

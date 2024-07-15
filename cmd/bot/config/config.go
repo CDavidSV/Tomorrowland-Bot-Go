@@ -12,13 +12,16 @@ type Bot struct {
 	LiveStreams *[]tmrlweb.YTVideo
 }
 
-var ErrorColorHex int = 0xe60000
-var MainColorHex int = 0x7E22DE
-
 type Content struct {
 	Message     string
 	Description string
 }
+
+var ErrorColorHex int = 0xe60000
+var MainColorHex int = 0x7E22DE
+var OneWorldRadioImg string = "https://d384fynlilbsl.cloudfront.net/one_world_radio_logo.png"
+var ErrorImg string = "https://d384fynlilbsl.cloudfront.net/error-icon.png"
+var StreamGif string = "https://d384fynlilbsl.cloudfront.net/stream.gif"
 
 func (b *Bot) BotError(err error, commandName string) {
 	b.Logger.Error(err.Error(), "command", commandName)
@@ -28,7 +31,7 @@ func (b *Bot) ErrorInteractionResponse(s *discordgo.Session, i *discordgo.Intera
 	responseEmbed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    content.Message,
-			IconURL: "https://d384fynlilbsl.cloudfront.net/error-icon.png",
+			IconURL: ErrorImg,
 		},
 		Color: ErrorColorHex,
 	}
@@ -66,7 +69,7 @@ func (b *Bot) ErrorMessageResponse(s *discordgo.Session, i *discordgo.Interactio
 	responseEmbed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{
 			Name:    content.Message,
-			IconURL: "https://d384fynlilbsl.cloudfront.net/error-icon.png",
+			IconURL: ErrorImg,
 		},
 		Color: ErrorColorHex,
 	}

@@ -187,7 +187,7 @@ func GetPerformances(date string, stage string) []Performance {
 }
 
 func GetLiveStreams(YTList *[]YTVideo) {
-	log.Println("Fetching live streams")
+	log.Println("Fetching live streams...")
 
 	livestreamsURLS := []string{
 		"https://www.youtube.com/watch?v=wBgSH-CGPzg",
