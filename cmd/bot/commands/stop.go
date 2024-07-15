@@ -30,7 +30,7 @@ var StopCommand Command = Command{
 			return
 		}
 
-		if yes := player.PlayerExists(i.Interaction.GuildID); !yes {
+		if _, ok := s.VoiceConnections[i.Interaction.GuildID]; !ok {
 			bot.ErrorInteractionResponse(s, i, config.Content{
 				Message: "I'm not inside any voice channel currently",
 			}, false, true)
@@ -41,7 +41,8 @@ var StopCommand Command = Command{
 		if err != nil {
 			bot.Logger.Error(err.Error(), "command", "stop")
 			bot.ErrorInteractionResponse(s, i, config.Content{
-				Message: "I'm sorry, something went wrong. Try again",
+				Message:     "I'm sorry, something went wrong. Try again",
+				Description: "If the bot was disconnected from the voice channel manually, wait a few seconds before trying again",
 			}, false, true)
 			return
 		}

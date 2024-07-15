@@ -5,6 +5,7 @@ go 1.22.5
 require (
 	github.com/CDavidSV/dca v0.0.0-20240711062104-9ddf5fb9041c
 	github.com/bwmarrin/discordgo v0.28.1
+	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 )
 
