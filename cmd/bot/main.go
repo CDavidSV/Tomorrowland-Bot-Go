@@ -45,7 +45,7 @@ func main() {
 
 	// Flags
 	rc := flag.Bool("rc", true, "Reloads application commands")
-	doc := flag.Bool("doc", false, "Deletes old application commands")
+	doc := flag.Bool("del-old", false, "Deletes old application commands")
 	guildID := flag.String("guild", "", "Guild ID to test commands")
 	flag.Parse()
 

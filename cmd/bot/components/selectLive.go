@@ -15,7 +15,7 @@ func SelectLive(s *discordgo.Session, i *discordgo.InteractionCreate, bot *confi
 		return
 	}
 
-	if len(*bot.LiveStreams) < selectedStreamIndex {
+	if len(*bot.LiveStreams) <= selectedStreamIndex {
 		return
 	}
 

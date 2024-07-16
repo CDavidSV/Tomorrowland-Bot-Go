@@ -186,6 +186,14 @@ func GetPerformances(date string, stage string) []Performance {
 	return nil
 }
 
+func GetStages(date string) map[string][]Performance {
+	if v, ok := performances[date]; ok {
+		return v
+	}
+
+	return nil
+}
+
 func GetLiveStreams(YTList *[]YTVideo) {
 	log.Println("Fetching live streams...")
 
@@ -233,4 +241,11 @@ func GetLiveStreams(YTList *[]YTVideo) {
 		*YTList = append(*YTList, *video)
 		mu.Unlock()
 	}
+}
+
+func CurrentlyPLaying(p Performance) bool {
+	loc, _ := time.LoadLocation("Europe/Brussels")
+	nowBelgium := time.Now().In(loc)
+
+	return nowBelgium.Unix() >= p.StartTime.Unix() && nowBelgium.Unix() <= p.EndTime.Unix()
 }

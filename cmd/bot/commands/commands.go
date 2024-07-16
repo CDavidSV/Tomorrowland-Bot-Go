@@ -28,6 +28,7 @@ func LoadCommands(s *discordgo.Session, bot *config.Bot, reloadCommands bool, de
 	setCommand(StopCommand)
 	setCommand(InviteCommand)
 	setCommand(LineupCommand)
+	setCommand(NowPlayingCommand)
 
 	if deleteOldCommands {
 		log.Println("Deleting old commands...")
