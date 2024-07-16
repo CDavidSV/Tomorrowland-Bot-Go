@@ -33,8 +33,15 @@ const formatDate = (date) => {
 const getTimetable = async (page) => {
     const now = new Date();
     const day = getArg("-d", formatDate(now));
-
+    
     await page.goto(`https://belgium.tomorrowland.com/en/line-up/?page=timetable&day=${day}`);
+    
+    // Remove cookies modal
+    const acceptCookiesBtn = page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll');
+    await acceptCookiesBtn.click({ button: 'left' });
+    await page.mouse.move(0, 0);
+    await page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll').waitFor({ state: "hidden" });
+
     const buffer = await page.locator('#planby-wrapper').screenshot(); // { path: `timetable_${day}.png` }
     console.log(buffer.toString('base64'));
 }
@@ -58,13 +65,6 @@ const getTimetable = async (page) => {
     let page = await browser.newPage();
     
     await page.setViewportSize({ width: 1920, height: 1080 });
-    
-    await page.goto('https://belgium.tomorrowland.com/en/line-up/');
-    const acceptCookiesBtn = page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll');
-    await acceptCookiesBtn.click({ button: 'left' });
-    await page.mouse.move(0, 0);
-
-    await page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll').waitFor({ state: "hidden" });
 
     await operations[operation](page);
     await browser.close();
