@@ -130,7 +130,7 @@ func getStage(s *discordgo.Session, i *discordgo.InteractionCreate, _ *config.Bo
 
 	responseEmbed.Title = fmt.Sprintf("%v\n%v", selectedStage.StringValue(), tmrlweb.DayNameMap[selectedDay.StringValue()])
 	responseEmbed.Fields = fields
-	responseEmbed.Description = "All times are in GMT+2 (Belgium Time)"
+	responseEmbed.Description = "All times are in GMT+2 (Brussels Time)"
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
